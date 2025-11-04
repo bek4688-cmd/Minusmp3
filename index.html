@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MP3 Minus Generator</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 50px; }
+    input[type=file], button { margin: 10px; padding: 8px; font-size: 16px; }
+    #result a { display: block; margin: 10px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h2>🎵 MP3 Minus & Text Generator</h2>
+  <form id="uploadForm">
+    <input type="file" name="file" accept=".mp3" required>
+    <button type="submit">Yuklash</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+  document.getElementById('uploadForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    let res = await fetch('/upload', { method: 'POST', body: formData });
+    let data = await res.json();
+    document.getElementById('result').innerHTML = `
+      <h3>Yuklab olish:</h3>
+      <a href="${data.minus_url}">🎶 Minusni yuklab olish</a>
+      <a href="${data.text_url}">📝 Textni yuklab olish</a>
+    `;
+  }
+  </script>
+</body>
+</html>
