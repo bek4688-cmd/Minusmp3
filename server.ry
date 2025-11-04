@@ -1,0 +1,56 @@
+from flask import Flask, request, send_file, render_template, redirect, url_for
+import os
+
+app = Flask(__name__)
+UPLOAD_FOLDER = 'uploads'
+MINUS_FOLDER = 'minus'
+TXT_FOLDER = 'txt'
+
+# Papkalarni yaratish agar bo'lmasa
+for folder in [UPLOAD_FOLDER, MINUS_FOLDER, TXT_FOLDER]:
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+@app.route('/')
+def index():
+    return render_template('index.html')  # Sizning HTML sahifangiz
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return "Fayl topilmadi", 400
+    file = request.files['file']
+    if file.filename == '':
+        return "Fayl tanlanmadi", 400
+    
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(filepath)
+
+    # Minus qilish va txt chiqarish funksiyasi
+    minus_path = os.path.join(MINUS_FOLDER, file.filename)
+    txt_path = os.path.join(TXT_FOLDER, file.filename.rsplit('.',1)[0]+'.txt')
+
+    # Bu yerda siz haqiqiy minus qilish va matn chiqarish kodini qo'yasiz
+    # Hozir shunchaki original faylni nusxalaymiz
+    from shutil import copyfile
+    copyfile(filepath, minus_path)
+    with open(txt_path, 'w', encoding='utf-8') as f:
+        f.write("Qo'shiq matni shu yerga keladi")
+
+    return f"Fayl yuklandi! <a href='/download/{file.filename}'>Minus va txt yuklash</a>"
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    minus_path = os.path.join(MINUS_FOLDER, filename)
+    txt_path = os.path.join(TXT_FOLDER, filename.rsplit('.',1)[0]+'.txt')
+    return f"""
+    <a href="/files/{minus_path}">Minusni yuklash</a><br>
+    <a href="/files/{txt_path}">Textni yuklash</a>
+    """
+
+@app.route('/files/<path:path>')
+def serve_file(path):
+    return send_file(path, as_attachment=True)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
